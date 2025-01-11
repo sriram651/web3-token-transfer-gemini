@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { Button } from "@nextui-org/react";
+// import { Button } from "@nextui-org/react";
+import { ConnectKitButton } from "connectkit";
 
 export default function Header() {
   return (
@@ -13,9 +14,7 @@ export default function Header() {
           className="rounded-full"
         />
 
-        <Button color="default" size="md" radius="md">
-          Connect Wallet
-        </Button>
+        <ConnectKitButton />
       </div>
     </header>
   );
