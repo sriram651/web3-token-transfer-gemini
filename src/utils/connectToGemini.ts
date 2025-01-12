@@ -13,20 +13,27 @@ export async function connectToGemini(inputValue: string) {
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
       systemInstruction: `
-        Parse the user's command into an EVM-compatible transaction. Identify:
-        1. The recipient address (to receive ETH/tokens).
-        2. The token contract address for ERC20 transfers.
-        3. The transfer amount in wei.
+      Parse the user's command into an EVM-compatible transaction. Identify:
+      1. The recipient address (to receive ETH or tokens).
+      2. The token contract address for ERC20 transfers (if applicable).
+      3. The transfer amount exactly as provided by the user (in human-readable decimal format).
+      4. Do not convert the amount to wei; return it as a string in its original format.
 
-        Rules:
-        - The recipient address must be distinct from the token contract address.
-        - Validate the token contract address to ensure it is not a wallet address.
-        - Return "INVALID" if the input format is unrecognized.
-        - Return "INVALID_ADDRESS" if any address is not a valid EVM address.
+      Rules:
+      - For ERC20 tokens, assume the token uses 18 decimals unless otherwise specified (no conversion to wei is required).
+      - The recipient address must be distinct from the token contract address.
+      - Validate the token contract address to ensure it is not a wallet address.
+      - Return "INVALID" if the input format is unrecognized.
+      - Return "INVALID_ADDRESS" if any address is not a valid EVM address.
 
-        For valid commands, return the output strictly in this JSON format:
-        \`{"recipientAddress": "0x000...", "amountInWei": 123, "isERC20": true, "tokenAddress": "0x345..."}\`.
-      `,
+      For valid commands, return the output strictly in this JSON format:
+      \`{
+        "recipientAddress": "0x000...",
+        "amount": "0.1",  // Decimal value as provided by the user
+        "isERC20": true,
+        "tokenAddress": "0x345..." // Null for ETH transfers
+      }\`
+        `,
     });
 
     const prompt = inputValue;

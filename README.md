@@ -72,7 +72,7 @@ A Next.js application that integrates Gemini AI to interpret natural language co
         "success": true,
         "data": {
             "recipientAddress": "0x000...",
-            "amountInWei": 123,
+            "amount": 123,
             "isERC20": true,
             "tokenAddress": "0x345..."
         }

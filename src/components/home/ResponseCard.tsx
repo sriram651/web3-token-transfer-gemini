@@ -1,4 +1,5 @@
 import { GeminiResponse } from "@/hooks/useGeminiHandler";
+import TransactionSuccessful from "@/components/TransactionSuccessful";
 import { Card, CardBody, CardHeader } from "@nextui-org/react";
 import Image from "next/image";
 
@@ -30,6 +31,12 @@ export const ResponseCard: React.FC<ResponseCardProps> = ({ response }) => {
         <div className="w-full text-lg font-semibold text-left">
           <p className="w-full text-base font-normal text-left">
             {response.text}
+            {response.url && (
+              <>
+                {" "}
+                <TransactionSuccessful url={response.url} />
+              </>
+            )}
           </p>
         </div>
       </CardBody>

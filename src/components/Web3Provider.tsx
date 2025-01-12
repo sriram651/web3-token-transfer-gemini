@@ -1,14 +1,16 @@
 import { WagmiProvider, createConfig, http } from "wagmi";
-import { mainnet, polygonAmoy } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
+import { ReactNode } from "react";
+import { polygonAmoy } from "viem/chains";
+import NetworkCheck from "./NetworkCheck";
 
-const config = createConfig(
+export const config = createConfig(
   getDefaultConfig({
-    chains: [mainnet, polygonAmoy],
+    chains: [polygonAmoy],
     transports: {
-      [mainnet.id]: http(
-        `https://eth-mainnet.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_ID}`
+      [polygonAmoy.id]: http(
+        `https://polygon-amoy.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_ID}`
       ),
     },
 
@@ -29,13 +31,14 @@ const config = createConfig(
 
 const queryClient = new QueryClient();
 
-import { ReactNode } from "react";
-
 export const Web3Provider = ({ children }: { children: ReactNode }) => {
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <ConnectKitProvider>{children}</ConnectKitProvider>
+        <ConnectKitProvider>
+          {children}
+          <NetworkCheck />
+        </ConnectKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
