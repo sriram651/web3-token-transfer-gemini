@@ -1,7 +1,6 @@
 import localFont from "next/font/local";
 import Header from "@/components/Header";
-import { Input } from "@nextui-org/react";
-import HomePage from "@/components/HomePage";
+import HomePage from "@/components/home/HomePage";
 import Head from "next/head";
 
 const geistSans = localFont({
