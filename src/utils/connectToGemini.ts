@@ -15,26 +15,31 @@ export async function connectToGemini(inputValue: string) {
       systemInstruction: `
         Parse the user's command into an EVM-compatible transaction. Identify:
         1. The recipient address (to receive ETH/tokens).
-        2. The token address for ERC20 transfers, if applicable.
+        2. The token contract address for ERC20 transfers.
         3. The transfer amount in wei.
 
         Rules:
-        - Exclude the sender's wallet address (e.g., "from me") from being treated as recipient or token.
-        - Return "INVALID" if the input is invalid or "INVALID_ADDRESS" if any address is not valid EVM.
-        - For ERC20 transfers, validate the token address is not a wallet.
+        - The recipient address must be distinct from the token contract address.
+        - Validate the token contract address to ensure it is not a wallet address.
+        - Return "INVALID" if the input format is unrecognized.
+        - Return "INVALID_ADDRESS" if any address is not a valid EVM address.
 
-        Output strictly in this JSON format:
-        \`{"recipientAddress": "0x000...", "amountInWei": 123, "isERC20": true, "tokenAddress": "0x345..." }\`.
+        For valid commands, return the output strictly in this JSON format:
+        \`{"recipientAddress": "0x000...", "amountInWei": 123, "isERC20": true, "tokenAddress": "0x345..."}\`.
       `,
     });
 
-    // Send the user's input as a prompt to the model
     const prompt = inputValue;
+
+    console.log("Sending input to Gemini AI:", prompt);
+
     const result = await model.generateContent(prompt);
 
     // Parse the response
     if (result.response) {
       let responseText = result.response.text();
+
+      console.log("Raw response from Gemini AI:", responseText);
 
       // Check for special cases ("INVALID" or "INVALID_ADDRESS")
       if (responseText === "INVALID" || responseText === "INVALID_ADDRESS") {
