@@ -18,8 +18,11 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Home Page</title>
-        <meta name="description" content="Welcome to the Home Page" />
+        <title>Transfer tokens | Home</title>
+        <meta
+          name="description"
+          content="Transfer ETH/ERC20 tokens from connected wallet to another wallet by providing commands in text form."
+        />
       </Head>
       <div
         className={`${geistSans.variable} ${geistMono.variable} h-full min-h-screen font-[family-name:var(--font-geist-sans)]`}

@@ -32,6 +32,7 @@ A Next.js application that integrates Gemini AI to interpret natural language co
     ```bash
     NEXT_PUBLIC_GEMINI_API_KEY=your-gemini-api-key
     NEXT_PUBLIC_RPC_URL=your-ethereum-rpc-url
+    NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your-wallet-connect-project-id
 4. Start the development server:
 
     ```bash
@@ -73,18 +74,10 @@ A Next.js application that integrates Gemini AI to interpret natural language co
         "data": {
             "recipientAddress": "0x000...",
             "amount": 123,
-            "isERC20": true,
+            "isErc20": true,
             "tokenAddress": "0x345..."
         }
     }
-
-### **Validation**
-
- - EVM addresses are validated using `ethers.utils.isAddress`.
- - ERC20 token addresses are verified as contracts using the Ethereum RPC.
-
-## License
-This project is licensed under the MIT License. See the LICENSE file for details.
 
 ## Acknowledgments
 

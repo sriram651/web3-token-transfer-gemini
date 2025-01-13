@@ -1,5 +1,4 @@
 import Image from "next/image";
-// import { Button } from "@nextui-org/react";
 import { ConnectKitButton } from "connectkit";
 
 export default function Header() {

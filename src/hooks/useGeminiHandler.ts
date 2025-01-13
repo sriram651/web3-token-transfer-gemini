@@ -4,29 +4,46 @@ import useTransactionHandler from "./useTransactionHandler";
 import { useAccount } from "wagmi";
 
 export interface GeminiResponse {
-  text: string;
+  text: string; // The response message to display
   timestamp: string;
-  url?: string;
+  url?: string; // Optional URL to view the transaction in a block explorer.
 }
 
+/**
+ * Custom hook to handle interactions with Gemini AI and transaction initiation.
+ * @returns Functions and states for managing Gemini inputs and transactions.
+ */
 export function useGeminiHandler() {
+  // States for managing user input, loading state, and responses to be displayed.
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [responses, setResponses] = useState<GeminiResponse[]>([]);
+
+  // Use the connected account address for transaction initiation
   const { address } = useAccount();
   const { error, handleTransaction } = useTransactionHandler();
 
+  /**
+   * Handles changes to the input field.
+   * @param value - The updated value from the input field.
+   */
   const handleInputChange = (value: string) => {
     setInputValue(value);
   };
 
+  /**
+   * Submits the user input to Gemini AI and processes the response.
+   * Initiates a blockchain transaction if the AI response is valid.
+   */
   const handleSubmit = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim()) return; // Ignore empty inputs
 
+    // Reset the loading state and responses.
     setIsLoading(true);
     setResponses([]);
+
     try {
-      // Make a POST request to the /api/gemini endpoint.
+      // Send the user input to the Gemini API for processing
       const res = await fetch("/api/gemini", {
         method: "POST",
         headers: {
@@ -37,48 +54,51 @@ export function useGeminiHandler() {
 
       const { data, success } = await res.json();
 
-      // If the request was successful, initiate the transaction.
-      if (success) {
-        // Display a message to the user indicating that the transaction is being initiated.
-        if (data.recipientAddress === address) {
-          setResponses(() => [
-            {
-              text: "You cannot send funds to yourself.",
-              timestamp: getCurrentDateTime(),
-            },
-          ]);
-          return;
-        }
+      // Handle invalid input, errors from Gemini API, invalid responses from Gemini AI.
+      if (!success) {
+        setResponses(() => [
+          {
+            text: "Invalid input or error processing your request.",
+            timestamp: getCurrentDateTime(),
+          },
+        ]);
+      }
 
-        const newResponse = {
+      const { tokenAddress, recipientAddress, amount, isErc20 } = data;
+
+      // Prevent self-transfers.
+      if (recipientAddress === address) {
+        setResponses(() => [
+          {
+            text: "Sender & Recipient addresses cannot be the same.",
+            timestamp: getCurrentDateTime(),
+          },
+        ]);
+        return;
+      }
+
+      // Notify user about transaction initiation
+      setResponses(() => [
+        {
           text: `Please wait while we initiate the ${
-            data.isERC20 ? "ERC20" : "ETH"
-          } transfer to ${data.recipientAddress}`,
+            isErc20 ? "ERC20" : "ETH"
+          } transfer to ${recipientAddress}`,
           timestamp: getCurrentDateTime(),
-        };
-        setResponses(() => [newResponse]);
+        },
+      ]);
 
-        // Call transaction handler
-        const transaction = await handleTransaction({
-          tokenAddress: data.tokenAddress,
-          recipientAddress: data.recipientAddress,
-          amount: data.amount,
-          isErc20: data.isERC20,
-        });
+      // Initiate the transaction
+      const transaction = await handleTransaction({
+        tokenAddress,
+        recipientAddress,
+        amount,
+        isErc20,
+      });
 
-        if (transaction?.success) {
-          setResponses((prev) => [
-            ...prev,
-            {
-              text: `Transaction completed successfully. Tx Hash: ${transaction.txHash}`,
-              timestamp: getCurrentDateTime(),
-              url: `https://amoy.polygonscan.com/tx/${transaction.txHash}`,
-            },
-          ]);
+      const { success: transactionSuccess, txHash } = transaction;
 
-          return;
-        }
-
+      // Handle transaction success or failure
+      if (!transactionSuccess) {
         setResponses((prev) => [
           ...prev,
           {
@@ -86,27 +106,29 @@ export function useGeminiHandler() {
             timestamp: getCurrentDateTime(),
           },
         ]);
-
-        return;
-      } else {
-        setResponses(() => [
-          {
-            text: "Invalid input or error processing your request.",
-            timestamp: getCurrentDateTime(),
-          },
-          // ...prev,
-        ]);
       }
-    } catch (error) {
-      console.error("Error:", error);
+
+      // Notify user about transaction completion and provide the Block Explorer link for the transaction.
+      setResponses((prev) => [
+        ...prev,
+        {
+          text: `Transaction completed successfully. Click on the link to view on Polygon Amoy Scan explorer → `,
+          timestamp: getCurrentDateTime(),
+          url: `https://amoy.polygonscan.com/tx/${txHash}`,
+        },
+      ]);
+
+      return;
+    } catch {
+      // Handle unexpected errors
       setResponses(() => [
         {
           text: "An error occurred while processing your request.",
           timestamp: getCurrentDateTime(),
         },
-        // ...prev,
       ]);
     } finally {
+      // Reset the input field and loading state.
       setIsLoading(false);
       setInputValue("");
     }

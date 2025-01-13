@@ -11,28 +11,34 @@ import { useEffect } from "react";
 import { polygonAmoy } from "viem/chains";
 import { useAccount, useDisconnect, useSwitchChain } from "wagmi";
 
+// Component to enforce network restrictions for Polygon Amoy
 export default function NetworkCheck() {
   const { chainId, status } = useAccount();
   const { disconnectAsync } = useDisconnect();
   const { switchChainAsync } = useSwitchChain();
   const { isOpen, onOpenChange, onClose, onOpen } = useDisclosure();
-  const isValidNetwork = chainId === polygonAmoy.id;
+  const isValidNetwork = chainId === polygonAmoy.id; // Check if the user is on the correct network
 
+  // Trigger modal when connected to an invalid network
   useEffect(() => {
     if (status === "connected" && !isValidNetwork) {
-      onOpen();
+      onOpen(); // Open the modal
     }
   }, [status, isValidNetwork, onOpen]);
 
+  /**
+   * Handles switching the user's network to Polygon Amoy.
+   * If the network switch fails, disconnects the user.
+   */
   async function handleSwitchNetwork() {
     try {
       await switchChainAsync({
-        chainId: polygonAmoy.id,
+        chainId: polygonAmoy.id, // Target network: Polygon Amoy only
       });
 
-      onClose();
+      onClose(); // Close the modal on successful switch
     } catch {
-      await disconnectAsync();
+      await disconnectAsync(); // Disconnect the user if the switch fails for any reason
     }
   }
 
@@ -41,9 +47,9 @@ export default function NetworkCheck() {
       isOpen={isOpen}
       onClose={onClose}
       onOpenChange={onOpenChange}
-      hideCloseButton
-      isKeyboardDismissDisabled
-      isDismissable={false}
+      hideCloseButton // Remove the close button to make the modal non-dismissible
+      isKeyboardDismissDisabled // Prevent modal dismissal using the keyboard
+      isDismissable={false} // Prevent dismissal by clicking outside the modal
     >
       <ModalContent>
         <ModalHeader>Network Switch Required</ModalHeader>
