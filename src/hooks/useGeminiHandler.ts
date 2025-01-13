@@ -128,7 +128,6 @@ export function useGeminiHandler() {
 
       return;
     } catch (error) {
-      console.log("Error occurred while processing the request:", error);
       const errorMessage =
         error instanceof Error
           ? error?.message
