@@ -52,16 +52,22 @@ export function useGeminiHandler() {
         body: JSON.stringify({ input: inputValue }),
       });
 
-      const { data, success } = await res.json();
+      const response = await res.json();
+
+      const { success, data } = response;
 
       // Handle invalid input, errors from Gemini API, invalid responses from Gemini AI.
-      if (!success) {
+      if (!success || !data) {
         setResponses(() => [
           {
-            text: "Invalid input or error processing your request.",
+            text:
+              response?.message ||
+              "Invalid input or error processing your request.",
             timestamp: getCurrentDateTime(),
           },
         ]);
+
+        return;
       }
 
       const { tokenAddress, recipientAddress, amount, isErc20 } = data;
@@ -121,11 +127,16 @@ export function useGeminiHandler() {
       ]);
 
       return;
-    } catch {
-      // Handle unexpected errors
+    } catch (error) {
+      console.log("Error occurred while processing the request:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error?.message
+          : "An error occurred while processing your request.";
+
       setResponses(() => [
         {
-          text: "An error occurred while processing your request.",
+          text: errorMessage,
           timestamp: getCurrentDateTime(),
         },
       ]);

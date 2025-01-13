@@ -47,8 +47,13 @@ export async function connectToGemini(inputValue: string) {
       let responseText = result.response.text();
 
       // Handle special responses for invalid input or invalid addresses
-      if (responseText === "INVALID" || responseText === "INVALID_ADDRESS") {
-        return responseText;
+      if (
+        responseText.includes("INVALID") ||
+        responseText.includes("INVALID_ADDRESS")
+      ) {
+        throw new Error(
+          "Invalid input. Please provide a valid transaction request command."
+        );
       }
 
       try {
