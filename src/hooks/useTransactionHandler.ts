@@ -1,6 +1,11 @@
-import { useSendTransaction, useWalletClient } from "wagmi";
+import {
+  useAccount,
+  useConnect,
+  useSendTransaction,
+  useWalletClient,
+} from "wagmi";
 import { useState, useCallback } from "react";
-import { readContract } from "@wagmi/core";
+import { injected, readContract } from "@wagmi/core";
 import { config } from "@/components/Web3Provider";
 
 interface TransactionArgs {
@@ -12,7 +17,8 @@ interface TransactionArgs {
 
 interface Transaction {
   success: boolean;
-  txHash: string;
+  txHash: string | null;
+  errorMessage?: string;
 }
 
 /**
@@ -22,7 +28,14 @@ interface Transaction {
  */
 export default function useTransactionHandler() {
   // Wallet client for interacting with the blockchain
-  const { data: walletClient } = useWalletClient();
+  const { data: walletClient } = useWalletClient({
+    query: {
+      refetchOnMount: "always",
+    },
+  });
+
+  const { status } = useAccount();
+  const { connectAsync } = useConnect();
 
   // Hook for native token transfers
   const { sendTransactionAsync } = useSendTransaction();
@@ -51,8 +64,9 @@ export default function useTransactionHandler() {
       setError(null);
 
       try {
-        if (!walletClient) {
-          throw new Error("Wallet client is not available.");
+        // Connect the wallet if not connected.
+        if (status !== "connected") {
+          await connectAsync({ connector: injected() });
         }
 
         if (isErc20 && tokenAddress) {
@@ -91,6 +105,13 @@ export default function useTransactionHandler() {
             parseFloat(amount) * Math.pow(10, Number(decimals))
           );
 
+          // Ensure the wallet client is available
+          if (!walletClient) {
+            throw new Error(
+              "Wallet client not found. Try reconnecting your wallet & then retry."
+            );
+          }
+
           // Execute the ERC20 transfer
           const txHash = await walletClient.writeContract({
             address: tokenAddress as `0x${string}`,
@@ -113,16 +134,16 @@ export default function useTransactionHandler() {
 
         return { success: true, txHash };
       } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "An unknown error occurred.";
         // Handle errors during the transaction process
-        setError(
-          err instanceof Error ? err.message : "An unknown error occurred."
-        );
-        return { success: false, txHash: "" };
+        setError(errorMessage);
+        return { success: false, txHash: null, errorMessage };
       } finally {
         setIsProcessing(false);
       }
     },
-    [sendTransactionAsync, walletClient]
+    [sendTransactionAsync, walletClient, status, connectAsync]
   );
 
   return {

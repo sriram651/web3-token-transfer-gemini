@@ -21,7 +21,7 @@ export function useGeminiHandler() {
 
   // Use the connected account address for transaction initiation
   const { address } = useAccount();
-  const { error, handleTransaction } = useTransactionHandler();
+  const { handleTransaction } = useTransactionHandler();
 
   /**
    * Handles changes to the input field.
@@ -98,14 +98,16 @@ export function useGeminiHandler() {
       const { success: transactionSuccess, txHash } = transaction;
 
       // Handle transaction success or failure
-      if (!transactionSuccess) {
+      if (!transactionSuccess && transaction.errorMessage) {
         setResponses((prev) => [
           ...prev,
           {
-            text: error || "Transaction failed. Please try again.",
+            text: `Transaction failed: ${transaction.errorMessage}`,
             timestamp: getCurrentDateTime(),
           },
         ]);
+
+        return;
       }
 
       // Notify user about transaction completion and provide the Block Explorer link for the transaction.
