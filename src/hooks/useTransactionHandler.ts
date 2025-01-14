@@ -1,11 +1,6 @@
-import {
-  useAccount,
-  useConnect,
-  useSendTransaction,
-  useWalletClient,
-} from "wagmi";
+import { useAccount, useConnect, useSendTransaction } from "wagmi";
 import { useState, useCallback } from "react";
-import { injected, readContract } from "@wagmi/core";
+import { injected, readContract, writeContract } from "@wagmi/core";
 import { config } from "@/components/Web3Provider";
 
 interface TransactionArgs {
@@ -27,13 +22,6 @@ interface Transaction {
  * @returns Functions and states for processing transactions.
  */
 export default function useTransactionHandler() {
-  // Wallet client for interacting with the blockchain
-  const { data: walletClient } = useWalletClient({
-    query: {
-      refetchOnMount: "always",
-    },
-  });
-
   const { status } = useAccount();
   const { connectAsync } = useConnect();
 
@@ -105,15 +93,8 @@ export default function useTransactionHandler() {
             parseFloat(amount) * Math.pow(10, Number(decimals))
           );
 
-          // Ensure the wallet client is available
-          if (!walletClient) {
-            throw new Error(
-              "Wallet client not found. Try reconnecting your wallet & then retry."
-            );
-          }
-
           // Execute the ERC20 transfer
-          const txHash = await walletClient.writeContract({
+          const txHash = await writeContract(config, {
             address: tokenAddress as `0x${string}`,
             abi,
             functionName: "transfer",
@@ -143,7 +124,7 @@ export default function useTransactionHandler() {
         setIsProcessing(false);
       }
     },
-    [sendTransactionAsync, walletClient, status, connectAsync]
+    [sendTransactionAsync, status, connectAsync]
   );
 
   return {
